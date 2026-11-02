@@ -44,6 +44,8 @@ MENSAGENS_VALIDACAO = {
 
 MENSAGENS_HTTP = {404: "Recurso não encontrado.", 405: "Método não permitido."}
 
+sessao.avisar_conta_ausente()
+
 app = FastAPI(title="SmartNet Analyzer", docs_url=None, redoc_url=None, openapi_url=None)
 
 

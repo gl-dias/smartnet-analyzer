@@ -1,5 +1,10 @@
 """Testes do login, da proteção de rotas e dos limites de tentativas."""
 
+import logging
+import os
+import subprocess
+import sys
+
 import pytest
 from fastapi.testclient import TestClient
 from itsdangerous import TimestampSigner
@@ -183,6 +188,31 @@ def test_finalizar_encerra_a_sessao(logado):
     assert logado.post("/api/sessao/finalizar").json() == {"ok": True}
     assert logado.post("/api/estrutura", json=GRAFO).status_code == 401
     assert logado.get("/").status_code == 303
+
+
+def test_ambiente_com_erro_de_digitacao_impede_a_subida():
+    ambiente = {**os.environ, "AMBIENTE": "production"}
+    processo = subprocess.run(
+        [sys.executable, "-c", "import src.config"], env=ambiente, capture_output=True, text=True
+    )
+    assert processo.returncode != 0
+    assert "AMBIENTE" in processo.stderr
+
+
+def test_login_recusado_registra_o_ip_e_nunca_a_senha(monkeypatch, caplog):
+    monkeypatch.setattr(config, "AMBIENTE", "producao")
+    cabecalho = {"X-Forwarded-For": "10.0.0.1, 203.0.113.9"}
+    with caplog.at_level(logging.WARNING, logger="src.auth.sessao"):
+        entrar(novo_cliente(), senha="senha-que-nao-pode-vazar", cabecalhos=cabecalho)
+    assert "ip=203.0.113.9 x_forwarded_for=10.0.0.1, 203.0.113.9" in caplog.text
+    assert "senha-que-nao-pode-vazar" not in caplog.text
+
+
+def test_conta_ausente_gera_aviso_no_log(monkeypatch, caplog):
+    monkeypatch.setattr(config, "APP_SENHA_HASH", "")
+    with caplog.at_level(logging.WARNING, logger="src.auth.sessao"):
+        sessao.avisar_conta_ausente()
+    assert "ninguém conseguirá entrar" in caplog.text
 
 
 # Limite de tentativas

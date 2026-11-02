@@ -57,6 +57,11 @@ def chave_secreta(ambiente, valor):
     return secrets.token_urlsafe(48)
 
 
+def avisar_conta_ausente():
+    if not (config.APP_USUARIO and config.APP_SENHA_HASH):
+        logger.warning("APP_USUARIO ou APP_SENHA_HASH não definidos: ninguém conseguirá entrar.")
+
+
 def _agora():
     return time.time()
 
@@ -101,9 +106,12 @@ def _encerrar(request, tarefas):
 @roteador.post("/login")
 def login(dados: LoginEntrada, request: Request, tarefas: BackgroundTasks):
     ip = ip_cliente(request)
+    encaminhado = request.headers.get("x-forwarded-for", "")[:200]
     if not (limitador_login_ip.permitir(ip) and limitador_login_global.permitir("todos")):
+        logger.warning("Login bloqueado: ip=%s x_forwarded_for=%s", ip, encaminhado)
         raise HTTPException(status_code=429, detail=MENSAGEM_BLOQUEIO)
     if not _credenciais_validas(dados.usuario, dados.senha):
+        logger.warning("Login recusado: ip=%s x_forwarded_for=%s", ip, encaminhado)
         raise HTTPException(status_code=401, detail=MENSAGEM_CREDENCIAIS)
     limitador_login_ip.limpar(ip)
     sessao_id = str(uuid.uuid4())
