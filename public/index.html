@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmartNet Analyzer</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+  <div id="aplicacao">
+    <header class="topo">
+      <h1 class="marca">SmartNet <span>Analyzer</span></h1>
+      <div class="topo-opcoes">
+        <label class="chave"><input type="checkbox" id="chave-direcionado"><span class="trilho"></span>Direcionado</label>
+        <label class="chave"><input type="checkbox" id="chave-ponderado" checked><span class="trilho"></span>Ponderado</label>
+      </div>
+      <div class="topo-acoes">
+        <button type="button" class="botao" id="botao-sair" disabled title="Disponível com o login">Sair</button>
+        <button type="button" class="botao perigo" id="botao-finalizar">Finalizar aplicação</button>
+      </div>
+    </header>
+
+    <main class="painel-grade">
+      <section class="painel area-mapear" aria-labelledby="titulo-mapear">
+        <h2 id="titulo-mapear">Mapear cidade</h2>
+        <div class="abas" role="tablist">
+          <button type="button" role="tab" class="aba" data-aba="linguagem" aria-selected="false">Linguagem natural</button>
+          <button type="button" role="tab" class="aba" data-aba="voz" aria-selected="false">Voz</button>
+          <button type="button" role="tab" class="aba" data-aba="manual" aria-selected="true">Manual</button>
+          <button type="button" role="tab" class="aba" data-aba="texto" aria-selected="false">Texto</button>
+          <button type="button" role="tab" class="aba" data-aba="importar" aria-selected="false">Importar/Exemplos</button>
+        </div>
+
+        <div class="aba-conteudo" data-conteudo="linguagem" hidden>
+          <p class="nota">Entrada por linguagem natural em construção. Use as abas Manual, Texto ou Importar/Exemplos.</p>
+        </div>
+
+        <div class="aba-conteudo" data-conteudo="voz" hidden>
+          <p class="nota">Entrada por voz em construção. Use as abas Manual, Texto ou Importar/Exemplos.</p>
+        </div>
+
+        <div class="aba-conteudo" data-conteudo="manual">
+          <form id="form-via" class="linha-form" autocomplete="off">
+            <label>Origem<input id="via-origem" list="lista-vertices" required maxlength="60"></label>
+            <label>Destino<input id="via-destino" list="lista-vertices" required maxlength="60"></label>
+            <label class="so-ponderado">Peso<input id="via-peso" inputmode="decimal" required></label>
+            <button type="submit" class="botao primario">Adicionar via</button>
+          </form>
+          <form id="form-bairro" class="linha-form" autocomplete="off">
+            <label>Bairro sem vias<input id="bairro-nome" required maxlength="60"></label>
+            <button type="submit" class="botao">Adicionar bairro</button>
+          </form>
+          <datalist id="lista-vertices"></datalist>
+
+          <h3>Bairros</h3>
+          <div id="lista-bairros" class="etiquetas"></div>
+          <h3>Vias</h3>
+          <div class="tabela-rolagem">
+            <table>
+              <thead><tr><th>Via</th><th class="so-ponderado">Peso</th><th><span class="oculto">Remover</span></th></tr></thead>
+              <tbody id="tabela-vias"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="aba-conteudo" data-conteudo="texto" hidden>
+          <label class="bloco" for="texto-arestas">Uma via por linha: origem, destino e peso, separados por espaço. O tipo do grafo vem das chaves Direcionado e Ponderado.</label>
+          <textarea id="texto-arestas" rows="9" spellcheck="false" placeholder="O A 2&#10;O C 4&#10;B C 1"></textarea>
+          <div class="linha-botoes">
+            <button type="button" class="botao primario" id="texto-substituir">Substituir grafo</button>
+            <button type="button" class="botao" id="texto-adicionar">Adicionar ao grafo atual</button>
+          </div>
+        </div>
+
+        <div class="aba-conteudo" data-conteudo="importar" hidden>
+          <button type="button" class="botao primario largo" data-exemplo="grafo_enunciado">Carregar grafo de exemplo (enunciado)</button>
+          <h3>Outros exemplos</h3>
+          <div class="linha-botoes">
+            <button type="button" class="botao" data-exemplo="grafo_direcionado">Direcionado</button>
+            <button type="button" class="botao" data-exemplo="grafo_sem_peso">Sem peso</button>
+            <button type="button" class="botao" data-exemplo="grafo_desconexo">Desconexo</button>
+          </div>
+          <h3>Arquivo JSON</h3>
+          <div class="linha-botoes">
+            <button type="button" class="botao" id="botao-exportar">Exportar JSON</button>
+            <label class="botao" tabindex="0">Importar JSON<input type="file" id="arquivo-importar" accept=".json,application/json" hidden></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="painel area-mapa" aria-labelledby="titulo-mapa">
+        <div class="painel-cabecalho">
+          <h2 id="titulo-mapa">Mapa da cidade</h2>
+          <div class="linha-botoes">
+            <button type="button" class="botao" id="botao-salvar" disabled title="Disponível com o banco de dados">Salvar grafo</button>
+            <button type="button" class="botao" id="botao-apagar">Apagar grafo</button>
+          </div>
+        </div>
+        <div id="mapa" class="mapa" role="img" aria-label="Desenho do grafo"></div>
+        <p id="estatisticas" class="nota"></p>
+      </section>
+
+      <section class="painel area-estrutura" aria-labelledby="titulo-estrutura">
+        <h2 id="titulo-estrutura">Estrutura em memória</h2>
+        <p class="nota">Lista de adjacência: vértice -&gt; [ (vizinho, peso), ... ]. Os vizinhos ficam em ordem alfabética, o que torna os resultados determinísticos.</p>
+        <div id="avisos-grafo"></div>
+        <div id="estrutura" class="cartoes"></div>
+      </section>
+
+      <section class="painel area-inteligencia" aria-labelledby="titulo-inteligencia">
+        <h2 id="titulo-inteligencia">Inteligência</h2>
+        <div class="linha-form">
+          <label>Origem<select id="seletor-origem"></select></label>
+          <label>Destino (opcional)<select id="seletor-destino"></select></label>
+        </div>
+        <div class="botoes-algoritmo">
+          <button type="button" class="botao-algoritmo" data-algoritmo="dfs">DFS<small>Auditoria de rotas</small></button>
+          <button type="button" class="botao-algoritmo" data-algoritmo="bfs">BFS<small>Propagação de alertas</small></button>
+          <button type="button" class="botao-algoritmo" data-algoritmo="dijkstra">Dijkstra<small>Rotas de emergência</small></button>
+          <button type="button" class="botao-algoritmo" data-algoritmo="kruskal">Kruskal<small>Rede de fibra ótica</small></button>
+        </div>
+        <div id="resultados" class="resultados" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <section id="encerramento" class="encerramento" hidden>
+    <div class="encerramento-cartao">
+      <h1 class="marca">SmartNet <span>Analyzer</span></h1>
+      <h2>Aplicação finalizada</h2>
+      <p>Resumo da sessão:</p>
+      <dl class="resumo">
+        <div><dt>Grafos criados</dt><dd id="resumo-grafos">0</dd></div>
+        <div><dt>Algoritmos executados</dt><dd id="resumo-algoritmos">0</dd></div>
+      </dl>
+      <a class="botao primario" id="botao-reentrar" href="/">Entrar novamente</a>
+    </div>
+  </section>
+
+  <dialog id="modal" class="modal">
+    <form method="dialog">
+      <h2 id="modal-titulo"></h2>
+      <p id="modal-texto"></p>
+      <div class="linha-botoes fim">
+        <button class="botao" value="nao">Cancelar</button>
+        <button class="botao perigo" id="modal-confirmar" value="sim"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="avisos-flutuantes" class="avisos-flutuantes" role="status" aria-live="polite"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js" integrity="sha384-yxKDWWf0wwdUj/gPeuL11czrnKFQROnLgY8ll7En9NYoXibgg3C6NK/UDHNtUgWJ" crossorigin="anonymous"></script>
+  <script src="/js/grafo_visual.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
