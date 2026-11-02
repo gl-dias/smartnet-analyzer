@@ -1,5 +1,6 @@
 """Aplicação FastAPI: middlewares, rotas e arquivos estáticos."""
 
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -10,9 +11,11 @@ from starlette.exceptions import HTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from src import config
-from src.api import rotas_algoritmos, rotas_grafo
+from src.api import rotas_algoritmos, rotas_grafo, rotas_ia
 from src.auth import sessao
 from src.core.grafo import ErroGrafo
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
 PASTA_PUBLICA = Path(__file__).resolve().parent.parent / "public"
 
@@ -29,6 +32,7 @@ MENSAGENS_VALIDACAO = {
     "model_type": "deve ser um objeto",
     "model_attributes_type": "deve ser um objeto",
     "too_long": "excede o tamanho máximo permitido",
+    "literal_error": "valor não permitido",
     "json_invalid": "JSON inválido",
 }
 
@@ -86,6 +90,7 @@ async def tratar_erro_http(_: Request, erro: HTTPException):
 app.include_router(sessao.roteador)
 app.include_router(rotas_grafo.roteador)
 app.include_router(rotas_algoritmos.roteador)
+app.include_router(rotas_ia.roteador)
 
 
 @app.get("/saude")

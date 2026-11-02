@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 roteador = APIRouter()
 
 limitador_login_ip = LimitadorTaxa(5, JANELA_LOGIN_SEGUNDOS)
-# Teto para todos os IPs juntos: se alguém forjar X-Forwarded-For para trocar de IP
-# a cada tentativa, ainda assim não consegue testar senhas sem limite.
+# Teto para todos os IPs juntos: mesmo que o IP de origem seja falsificado ou venha de
+# muitas máquinas, não é possível testar senhas sem limite.
 limitador_login_global = LimitadorTaxa(50, JANELA_LOGIN_SEGUNDOS)
 
 

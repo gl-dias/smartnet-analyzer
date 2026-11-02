@@ -24,22 +24,29 @@
       <section class="painel area-mapear" aria-labelledby="titulo-mapear">
         <h2 id="titulo-mapear">Mapear cidade</h2>
         <div class="abas" role="tablist">
-          <button type="button" role="tab" class="aba" data-aba="linguagem" aria-selected="false">Linguagem natural</button>
+          <button type="button" role="tab" class="aba" data-aba="linguagem" aria-selected="true">Linguagem natural</button>
           <button type="button" role="tab" class="aba" data-aba="voz" aria-selected="false">Voz</button>
-          <button type="button" role="tab" class="aba" data-aba="manual" aria-selected="true">Manual</button>
+          <button type="button" role="tab" class="aba" data-aba="manual" aria-selected="false">Manual</button>
           <button type="button" role="tab" class="aba" data-aba="texto" aria-selected="false">Texto</button>
           <button type="button" role="tab" class="aba" data-aba="importar" aria-selected="false">Importar/Exemplos</button>
         </div>
 
-        <div class="aba-conteudo" data-conteudo="linguagem" hidden>
-          <p class="nota">Entrada por linguagem natural em construção. Use as abas Manual, Texto ou Importar/Exemplos.</p>
+        <div class="aba-conteudo" data-conteudo="linguagem">
+          <label class="bloco" for="nl-texto">Descreva a cidade ou peça uma mudança. Nada é aplicado antes da sua revisão.</label>
+          <textarea id="nl-texto" rows="6" maxlength="2000" placeholder="A cidade tem os bairros O, A, B e C. O se liga ao A com custo 2 e ao C com custo 4. B liga em C com custo 1. As vias são de mão dupla."></textarea>
+          <div class="linha-envio">
+            <span class="nota" id="nl-contador"></span>
+            <button type="button" class="botao primario" id="nl-enviar">Interpretar</button>
+          </div>
+          <div id="nl-retorno" role="status" hidden></div>
+          <p class="nota nl-exemplos">Exemplos: "remova a via entre A e B", "mude o peso de O para C para 6", "adicione o bairro T ligado ao D com custo 5", "agora o grafo é direcionado", "rodar Dijkstra a partir de O".</p>
         </div>
 
         <div class="aba-conteudo" data-conteudo="voz" hidden>
           <p class="nota">Entrada por voz em construção. Use as abas Manual, Texto ou Importar/Exemplos.</p>
         </div>
 
-        <div class="aba-conteudo" data-conteudo="manual">
+        <div class="aba-conteudo" data-conteudo="manual" hidden>
           <form id="form-via" class="linha-form" autocomplete="off">
             <label>Origem<input id="via-origem" list="lista-vertices" required maxlength="60"></label>
             <label>Destino<input id="via-destino" list="lista-vertices" required maxlength="60"></label>
@@ -148,10 +155,28 @@
     </form>
   </dialog>
 
+  <dialog id="revisao" class="modal modal-revisao" aria-labelledby="revisao-titulo">
+    <h2 id="revisao-titulo">Revisar operações</h2>
+    <p class="nota">Desmarque o que não quiser aplicar. O mapa mostra o resultado das operações marcadas.</p>
+    <div class="revisao-corpo">
+      <ul id="revisao-lista" class="revisao-lista"></ul>
+      <div>
+        <div id="revisao-mapa" class="mapa revisao-mapa"></div>
+        <p id="revisao-estatisticas" class="nota"></p>
+      </div>
+    </div>
+    <p id="revisao-nota" class="revisao-erro"></p>
+    <div class="linha-botoes fim">
+      <button type="button" class="botao" id="revisao-cancelar">Cancelar</button>
+      <button type="button" class="botao primario" id="revisao-confirmar">Confirmar</button>
+    </div>
+  </dialog>
+
   <div id="avisos-flutuantes" class="avisos-flutuantes" role="status" aria-live="polite"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js" integrity="sha384-yxKDWWf0wwdUj/gPeuL11czrnKFQROnLgY8ll7En9NYoXibgg3C6NK/UDHNtUgWJ" crossorigin="anonymous"></script>
   <script src="/js/grafo_visual.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/linguagem_natural.js"></script>
 </body>
 </html>

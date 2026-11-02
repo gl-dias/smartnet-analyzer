@@ -193,6 +193,22 @@ summary { cursor: pointer; color: var(--suave); }
 .flutuante.erro { border-left-color: var(--perigo); }
 .flutuante.alerta { border-left-color: var(--alerta); }
 
+/* Linguagem natural e revisão */
+
+.linha-envio { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.nl-exemplos { margin-top: 12px; font-size: 12px; }
+.modal-revisao { width: min(960px, calc(100vw - 32px)); }
+.revisao-corpo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 14px; margin-top: 12px; }
+.revisao-lista { margin: 0; padding: 0; max-height: 380px; overflow-y: auto; list-style: none; }
+.revisao-item { padding: 6px 8px; border-bottom: 1px solid var(--borda); }
+.revisao-item label { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; overflow-wrap: anywhere; }
+.revisao-item input { margin-top: 3px; accent-color: var(--destaque); }
+.revisao-erro { margin-top: 3px; color: #f0868b; font-size: 12px; }
+.revisao-aviso { margin-top: 3px; color: var(--alerta); font-size: 12px; }
+.revisao-mapa { height: 340px; margin-top: 0; }
+#revisao-estatisticas { margin-top: 6px; }
+#revisao-nota:empty { display: none; }
+
 /* Modal e encerramento */
 
 .modal { width: min(420px, calc(100vw - 32px)); padding: 20px; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--painel); color: var(--texto); }
@@ -216,6 +232,9 @@ summary { cursor: pointer; color: var(--suave); }
 @media (max-width: 960px) {
   .painel-grade { grid-template-columns: minmax(0, 1fr); grid-template-areas: "mapear" "mapa" "estrutura" "inteligencia"; }
   .mapa { height: 340px; }
+  .revisao-corpo { grid-template-columns: minmax(0, 1fr); }
+  .revisao-lista { max-height: 220px; }
+  .revisao-mapa { height: 240px; }
 }
 
 @media (max-width: 560px) {

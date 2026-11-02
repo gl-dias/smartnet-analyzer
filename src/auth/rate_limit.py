@@ -55,12 +55,14 @@ def ip_cliente(request):
     """IP de origem da requisição.
 
     Em produção, o Render fica na frente da aplicação, então o IP real vem em
-    X-Forwarded-For. Localmente esse cabeçalho é ignorado, pois qualquer cliente
-    poderia enviá-lo para escapar do limite.
+    X-Forwarded-For. Cada proxy acrescenta um IP ao final da lista e o início é
+    controlado pelo cliente, por isso a contagem é feita a partir do fim:
+    PROXIES_CONFIAVEIS = 1 usa o último IP, 2 usa o penúltimo, e 0 ignora o cabeçalho.
+    Localmente o cabeçalho é sempre ignorado, pois não há proxy na frente.
     """
-    if config.AMBIENTE == "producao":
+    if config.AMBIENTE == "producao" and config.PROXIES_CONFIAVEIS > 0:
         encaminhado = request.headers.get("x-forwarded-for", "")
-        primeiro = encaminhado.split(",")[0].strip()
-        if primeiro:
-            return primeiro
+        ips = [ip.strip() for ip in encaminhado.split(",") if ip.strip()]
+        if len(ips) >= config.PROXIES_CONFIAVEIS:
+            return ips[-config.PROXIES_CONFIAVEIS]
     return request.client.host if request.client else "desconhecido"

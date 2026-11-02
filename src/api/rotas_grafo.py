@@ -35,9 +35,7 @@ def construir_grafo(entrada: GrafoEntrada) -> ListaAdjacencia:
     return ListaAdjacencia.from_json(entrada.model_dump(exclude_none=True))
 
 
-@roteador.post("/estrutura")
-def estrutura(entrada: GrafoEntrada):
-    grafo = construir_grafo(entrada)
+def descrever_estrutura(grafo: ListaAdjacencia) -> dict:
     dump = grafo.para_dict()
     return {
         # Lista, e não objeto, porque o JavaScript reordena chaves numéricas de objetos.
@@ -52,6 +50,11 @@ def estrutura(entrada: GrafoEntrada):
         },
         "avisos": grafo.avisos(),
     }
+
+
+@roteador.post("/estrutura")
+def estrutura(entrada: GrafoEntrada):
+    return descrever_estrutura(construir_grafo(entrada))
 
 
 @roteador.get("/exemplos/{nome}")

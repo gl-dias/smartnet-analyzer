@@ -224,11 +224,45 @@ def test_x_forwarded_for_e_ignorado_fora_de_producao():
 def test_em_producao_cada_ip_tem_sua_contagem(monkeypatch):
     monkeypatch.setattr(config, "AMBIENTE", "producao")
     cliente = novo_cliente()
-    primeiro = {"X-Forwarded-For": "203.0.113.1, 10.0.0.1"}
+    primeiro = {"X-Forwarded-For": "203.0.113.1"}
     for _ in range(5):
         assert entrar(cliente, senha="errada", cabecalhos=primeiro).status_code == 401
     assert entrar(cliente, cabecalhos=primeiro).status_code == 429
     assert entrar(cliente, cabecalhos={"X-Forwarded-For": "203.0.113.2"}).status_code == 200
+
+
+def test_falsificar_o_inicio_da_lista_nao_escapa_do_limite(monkeypatch):
+    monkeypatch.setattr(config, "AMBIENTE", "producao")
+    cliente = novo_cliente()
+    for i in range(5):
+        cabecalho = {"X-Forwarded-For": f"10.9.9.{i}, 203.0.113.1"}
+        assert entrar(cliente, senha="errada", cabecalhos=cabecalho).status_code == 401
+    cabecalho = {"X-Forwarded-For": "10.9.9.200, 203.0.113.1"}
+    assert entrar(cliente, cabecalhos=cabecalho).status_code == 429
+
+
+@pytest.mark.parametrize(
+    "proxies, cabecalho, esperado",
+    [
+        (1, "1.1.1.1, 2.2.2.2, 3.3.3.3", "3.3.3.3"),
+        (2, "1.1.1.1, 2.2.2.2, 3.3.3.3", "2.2.2.2"),
+        (2, "3.3.3.3", "192.0.2.7"),
+        (0, "1.1.1.1", "192.0.2.7"),
+        (1, "", "192.0.2.7"),
+    ],
+)
+def test_proxies_confiaveis_define_qual_ip_usar(monkeypatch, proxies, cabecalho, esperado):
+    monkeypatch.setattr(config, "AMBIENTE", "producao")
+    monkeypatch.setattr(config, "PROXIES_CONFIAVEIS", proxies)
+
+    class Conexao:
+        host = "192.0.2.7"
+
+    class Pedido:
+        headers = {"x-forwarded-for": cabecalho}
+        client = Conexao()
+
+    assert ip_cliente(Pedido()) == esperado
 
 
 def test_trocar_de_ip_a_cada_tentativa_esbarra_no_teto_global(monkeypatch):
