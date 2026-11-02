@@ -15,7 +15,7 @@
         <label class="chave"><input type="checkbox" id="chave-ponderado" checked><span class="trilho"></span>Ponderado</label>
       </div>
       <div class="topo-acoes">
-        <button type="button" class="botao" id="botao-sair" disabled title="Disponível com o login">Sair</button>
+        <button type="button" class="botao" id="botao-sair">Sair</button>
         <button type="button" class="botao perigo" id="botao-finalizar">Finalizar aplicação</button>
       </div>
     </header>
@@ -64,8 +64,8 @@
         </div>
 
         <div class="aba-conteudo" data-conteudo="texto" hidden>
-          <label class="bloco" for="texto-arestas">Uma via por linha: origem, destino e peso, separados por espaço. O tipo do grafo vem das chaves Direcionado e Ponderado.</label>
-          <textarea id="texto-arestas" rows="9" spellcheck="false" placeholder="O A 2&#10;O C 4&#10;B C 1"></textarea>
+          <label class="bloco" for="texto-arestas">Uma via por linha: origem, destino e peso, separados por espaço. Nomes com espaço vão entre aspas. O tipo do grafo vem das chaves Direcionado e Ponderado.</label>
+          <textarea id="texto-arestas" rows="9" spellcheck="false" placeholder="O A 2&#10;O C 4&#10;&quot;Vila Isabel&quot; Tijuca 3"></textarea>
           <div class="linha-botoes">
             <button type="button" class="botao primario" id="texto-substituir">Substituir grafo</button>
             <button type="button" class="botao" id="texto-adicionar">Adicionar ao grafo atual</button>
@@ -133,7 +133,7 @@
         <div><dt>Grafos criados</dt><dd id="resumo-grafos">0</dd></div>
         <div><dt>Algoritmos executados</dt><dd id="resumo-algoritmos">0</dd></div>
       </dl>
-      <a class="botao primario" id="botao-reentrar" href="/">Entrar novamente</a>
+      <a class="botao primario" id="botao-reentrar" href="/login">Entrar novamente</a>
     </div>
   </section>
 

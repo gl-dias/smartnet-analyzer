@@ -202,6 +202,10 @@ summary { cursor: pointer; color: var(--suave); }
 .encerramento { display: grid; min-height: 100vh; place-items: center; padding: 16px; }
 .encerramento-cartao { display: grid; gap: 14px; width: min(420px, 100%); padding: 28px; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--painel); text-align: center; }
 .encerramento-cartao h2 { font-size: 18px; }
+.login { text-align: left; }
+.login .marca { text-align: center; }
+.login label { font-size: 12px; color: var(--suave); }
+.login .aviso { margin-top: 0; }
 .resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
 .resumo div { padding: 12px; border-radius: 6px; background: var(--fundo); }
 .resumo dt { color: var(--suave); font-size: 12px; }

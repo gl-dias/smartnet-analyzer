@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar | SmartNet Analyzer</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+  <main class="encerramento">
+    <form id="form-login" class="encerramento-cartao login" autocomplete="on">
+      <h1 class="marca">SmartNet <span>Analyzer</span></h1>
+      <label>Usuário<input id="usuario" name="username" autocomplete="username" required autofocus></label>
+      <label>Senha<input id="senha" name="password" type="password" autocomplete="current-password" required></label>
+      <div id="erro-login" class="aviso erro" role="alert" hidden></div>
+      <button type="submit" class="botao primario" id="botao-entrar">Entrar</button>
+    </form>
+  </main>
+  <script src="/js/login.js"></script>
+</body>
+</html>

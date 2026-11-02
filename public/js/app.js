@@ -30,12 +30,12 @@ function el(tag, propriedades = {}, ...filhos) {
   return elemento;
 }
 
-function avisar(mensagem, tipo = "") {
+function avisar(mensagem, tipo = "", duracaoMs = tipo === "erro" ? 7000 : 4000) {
   const aviso = el("div", { classe: `flutuante ${tipo}`, texto: mensagem });
   const pilha = $("#avisos-flutuantes");
   pilha.append(aviso);
   while (pilha.children.length > 3) pilha.firstChild.remove();
-  setTimeout(() => aviso.remove(), tipo === "erro" ? 7000 : 4000);
+  setTimeout(() => aviso.remove(), duracaoMs);
 }
 
 function confirmar(titulo, texto, rotulo) {
@@ -62,6 +62,7 @@ async function chamarApi(caminho, corpo) {
     throw new Error("Não foi possível falar com o servidor. Verifique a conexão.");
   }
   const dados = await resposta.json().catch(() => ({}));
+  if (resposta.status === 401) window.location.href = "/login";
   if (!resposta.ok) throw new Error(dados.erro || "O servidor não conseguiu processar o pedido.");
   return dados;
 }
@@ -318,24 +319,34 @@ function alterarPesoVia(indice, texto) {
 
 // Chaves do topo
 
-function alternarDirecionado(direcionado) {
+async function alternarDirecionado(direcionado) {
   const candidato = copiaGrafo();
   candidato.direcionado = direcionado;
-  if (direcionado) {
-    if (candidato.arestas.length) avisar("Cada via passou a valer só no sentido em que foi cadastrada.", "alerta");
-  } else {
+  const fundidas = [];
+  if (!direcionado) {
     // A -> B e B -> A viram a mesma via sem direção: fica a primeira cadastrada.
-    const vistas = new Set();
+    const primeiras = new Map();
     candidato.arestas = candidato.arestas.filter((aresta) => {
       const par = JSON.stringify([aresta.origem, aresta.destino].sort());
-      if (vistas.has(par)) return false;
-      vistas.add(par);
+      if (primeiras.has(par)) {
+        fundidas.push({ mantida: primeiras.get(par), descartada: aresta });
+        return false;
+      }
+      primeiras.set(par, aresta);
       return true;
     });
-    const unidas = estado.grafo.arestas.length - candidato.arestas.length;
-    if (unidas) avisar(`${unidas} via(s) em sentido oposto foram unidas (ficou o peso da primeira cadastrada).`, "alerta");
   }
-  aplicarGrafo(candidato);
+  if (!await aplicarGrafo(candidato)) return;
+  if (direcionado && candidato.arestas.length) {
+    avisar("Cada via passou a valer só no sentido em que foi cadastrada.", "alerta");
+  }
+  if (fundidas.length) {
+    const pares = fundidas.map(({ mantida, descartada }) => {
+      const via = `${mantida.origem} ↔ ${mantida.destino}`;
+      return candidato.ponderado ? `${via} (ficou peso ${mantida.peso}, descartado ${descartada.peso})` : via;
+    });
+    avisar(`Vias fundidas: ${pares.join("; ")}.`, "alerta", 12000);
+  }
 }
 
 function alternarPonderado(ponderado) {
@@ -348,14 +359,27 @@ function alternarPonderado(ponderado) {
 
 // Entrada por texto
 
+// Separa os campos de uma linha. Campos entre aspas podem ter espaços. Devolve null se a linha for malformada.
+function separarCampos(linha) {
+  const texto = linha.replace(/[“”]/g, '"').trim();
+  const padrao = /\s*(?:"([^"]*)"|([^\s"]+))(?=\s|$)/y;
+  const campos = [];
+  while (padrao.lastIndex < texto.length) {
+    const encontrado = padrao.exec(texto);
+    if (!encontrado) return null;
+    campos.push(encontrado[1] ?? encontrado[2]);
+  }
+  return campos;
+}
+
 function interpretarTexto(texto) {
   const arestas = [];
   const linhas = texto.split("\n");
   for (let i = 0; i < linhas.length; i += 1) {
-    const partes = linhas[i].trim().split(/\s+/).filter(Boolean);
-    if (partes.length === 0) continue;
-    if (partes.length > 3 || partes.length < 2) {
-      throw new Error(`Linha ${i + 1}: use o formato "origem destino peso", com nomes sem espaço.`);
+    if (linhas[i].trim() === "") continue;
+    const partes = separarCampos(linhas[i]);
+    if (!partes || partes.length > 3 || partes.length < 2 || !partes[0].trim() || !partes[1].trim()) {
+      throw new Error(`Linha ${i + 1}: use o formato origem destino peso (nomes com espaço entre aspas).`);
     }
     const [origem, destino, pesoTexto] = partes;
     const aresta = { origem, destino };
@@ -650,9 +674,10 @@ async function finalizarAplicacao() {
   );
   if (!ok) return;
   try {
-    await chamarApi("/api/sessao/finalizar", {});
-  } catch (erro) {
-    avisar(erro.message, "alerta");
+    // Sem chamarApi: mesmo com a sessão já expirada, o resumo de encerramento deve aparecer.
+    await fetch("/api/sessao/finalizar", { method: "POST" });
+  } catch {
+    avisar("Não foi possível avisar o servidor, mas a sessão local foi encerrada.", "alerta");
   }
   $("#resumo-grafos").textContent = estado.contadores.grafos;
   $("#resumo-algoritmos").textContent = estado.contadores.algoritmos;
@@ -662,6 +687,19 @@ async function finalizarAplicacao() {
   } catch { /* Nada a limpar se o armazenamento estiver bloqueado. */ }
   $("#aplicacao").hidden = true;
   $("#encerramento").hidden = false;
+}
+
+async function sair() {
+  try {
+    await chamarApi("/logout", {});
+  } catch (erro) {
+    avisar(erro.message, "erro");
+    return;
+  }
+  try {
+    sessionStorage.removeItem(CHAVE_ARMAZENAMENTO);
+  } catch { /* Nada a limpar se o armazenamento estiver bloqueado. */ }
+  window.location.href = "/login";
 }
 
 // Inicialização
@@ -685,6 +723,7 @@ function ligarEventos() {
   $$("[data-algoritmo]").forEach((botao) => botao.addEventListener("click", () => executarAlgoritmo(botao.dataset.algoritmo)));
   $("#botao-apagar").addEventListener("click", apagarGrafo);
   $("#botao-finalizar").addEventListener("click", finalizarAplicacao);
+  $("#botao-sair").addEventListener("click", sair);
   $("#estrutura").addEventListener("mouseover", (e) => destacarCartao(e.target.closest(".cartao")));
   $("#estrutura").addEventListener("mouseleave", () => destacarCartao(null));
 }

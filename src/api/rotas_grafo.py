@@ -59,8 +59,3 @@ def exemplo(nome: str):
     if nome not in EXEMPLOS:
         raise HTTPException(status_code=404, detail="Exemplo não encontrado.")
     return json.loads((PASTA_EXEMPLOS / f"{nome}.json").read_text(encoding="utf-8"))
-
-
-@roteador.post("/sessao/finalizar")
-def finalizar_sessao():
-    return {"ok": True}

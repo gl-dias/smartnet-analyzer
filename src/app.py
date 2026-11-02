@@ -4,14 +4,20 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
+from starlette.middleware.sessions import SessionMiddleware
 
+from src import config
 from src.api import rotas_algoritmos, rotas_grafo
+from src.auth import sessao
 from src.core.grafo import ErroGrafo
 
 PASTA_PUBLICA = Path(__file__).resolve().parent.parent / "public"
+
+# Tudo exige sessão, exceto estes caminhos exatos. Rotas novas já nascem protegidas.
+CAMINHOS_PUBLICOS = frozenset({"/login", "/logout", "/saude", "/css/estilos.css", "/js/login.js"})
 
 MENSAGENS_VALIDACAO = {
     "missing": "campo obrigatório",
@@ -29,6 +35,26 @@ MENSAGENS_VALIDACAO = {
 MENSAGENS_HTTP = {404: "Recurso não encontrado.", 405: "Método não permitido."}
 
 app = FastAPI(title="SmartNet Analyzer", docs_url=None, redoc_url=None, openapi_url=None)
+
+
+@app.middleware("http")
+async def exigir_sessao(request: Request, chamar_proximo):
+    if request.url.path in CAMINHOS_PUBLICOS or sessao.sessao_valida(request):
+        return await chamar_proximo(request)
+    request.session.clear()
+    if request.url.path == "/":
+        return RedirectResponse("/login", status_code=303)
+    return JSONResponse(
+        status_code=401, content={"erro": "Sessão expirada. Faça login novamente."}
+    )
+
+
+# Adicionado por último para ficar por fora de exigir_sessao e preparar request.session antes dele.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=sessao.chave_secreta(config.AMBIENTE, config.SECRET_KEY),
+    **sessao.opcoes_cookie(config.AMBIENTE),
+)
 
 
 @app.exception_handler(ErroGrafo)
@@ -57,6 +83,7 @@ async def tratar_erro_http(_: Request, erro: HTTPException):
     return JSONResponse(status_code=erro.status_code, content={"erro": mensagem})
 
 
+app.include_router(sessao.roteador)
 app.include_router(rotas_grafo.roteador)
 app.include_router(rotas_algoritmos.roteador)
 

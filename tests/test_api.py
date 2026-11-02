@@ -4,8 +4,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.app import app
+from tests.conftest import SENHA_TESTE, USUARIO_TESTE
 
 cliente = TestClient(app)
+cliente.post("/login", json={"usuario": USUARIO_TESTE, "senha": SENHA_TESTE})
 
 
 def exemplo(nome="grafo_enunciado"):
@@ -164,7 +166,3 @@ def test_exemplo_desconhecido_nao_le_outros_arquivos():
 
 def test_rota_inexistente_em_portugues():
     assert cliente.get("/api/nada").json() == {"erro": "Recurso não encontrado."}
-
-
-def test_finalizar_sessao():
-    assert cliente.post("/api/sessao/finalizar", json={}).json() == {"ok": True}
