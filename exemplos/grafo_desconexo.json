@@ -1,0 +1,12 @@
+{
+  "nome": "Grafo desconexo",
+  "direcionado": false,
+  "ponderado": true,
+  "vertices": ["A", "B", "C", "X", "Y", "Z"],
+  "arestas": [
+    {"origem": "A", "destino": "B", "peso": 1},
+    {"origem": "B", "destino": "C", "peso": 2},
+    {"origem": "A", "destino": "C", "peso": 4},
+    {"origem": "X", "destino": "Y", "peso": 3}
+  ]
+}

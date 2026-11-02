@@ -1,0 +1,22 @@
+{
+  "nome": "Grafo do enunciado",
+  "direcionado": false,
+  "ponderado": true,
+  "vertices": ["O", "A", "B", "C", "D", "E", "F", "T"],
+  "arestas": [
+    {"origem": "O", "destino": "A", "peso": 2},
+    {"origem": "O", "destino": "B", "peso": 5},
+    {"origem": "O", "destino": "C", "peso": 4},
+    {"origem": "A", "destino": "B", "peso": 2},
+    {"origem": "A", "destino": "D", "peso": 7},
+    {"origem": "A", "destino": "F", "peso": 12},
+    {"origem": "B", "destino": "C", "peso": 1},
+    {"origem": "B", "destino": "D", "peso": 4},
+    {"origem": "B", "destino": "E", "peso": 3},
+    {"origem": "C", "destino": "E", "peso": 4},
+    {"origem": "D", "destino": "E", "peso": 4},
+    {"origem": "D", "destino": "T", "peso": 5},
+    {"origem": "E", "destino": "T", "peso": 7},
+    {"origem": "F", "destino": "T", "peso": 3}
+  ]
+}

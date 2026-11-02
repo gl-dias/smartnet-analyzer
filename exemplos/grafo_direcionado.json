@@ -1,0 +1,16 @@
+{
+  "nome": "Grafo direcionado",
+  "direcionado": true,
+  "ponderado": true,
+  "vertices": ["O", "A", "B", "C", "D", "E", "F"],
+  "arestas": [
+    {"origem": "O", "destino": "A", "peso": 2},
+    {"origem": "O", "destino": "C", "peso": 4},
+    {"origem": "A", "destino": "B", "peso": 3},
+    {"origem": "B", "destino": "C", "peso": 1},
+    {"origem": "C", "destino": "D", "peso": 5},
+    {"origem": "D", "destino": "B", "peso": 2},
+    {"origem": "D", "destino": "F", "peso": 1},
+    {"origem": "E", "destino": "O", "peso": 1}
+  ]
+}

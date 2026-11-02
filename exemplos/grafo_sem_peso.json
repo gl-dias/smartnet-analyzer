@@ -1,0 +1,13 @@
+{
+  "nome": "Grafo sem peso",
+  "direcionado": false,
+  "ponderado": false,
+  "vertices": ["A", "B", "C", "D", "E"],
+  "arestas": [
+    {"origem": "A", "destino": "B"},
+    {"origem": "A", "destino": "C"},
+    {"origem": "B", "destino": "D"},
+    {"origem": "C", "destino": "D"},
+    {"origem": "D", "destino": "E"}
+  ]
+}
