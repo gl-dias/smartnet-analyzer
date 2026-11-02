@@ -2,10 +2,12 @@
 
 const NL_MAXIMO_CARACTERES = 2000;
 
-const revisao = { operacoes: [], marcadas: [], grafo: null, visual: null };
+const revisao = { operacoes: [], marcadas: [], grafo: null, visual: null, campo: null };
 
-function atualizarContador() {
-  $("#nl-contador").textContent = `${$("#nl-texto").value.length} / ${NL_MAXIMO_CARACTERES}`;
+function ligarContador(campo, contador) {
+  const atualizar = () => { contador.textContent = `${campo.value.length} / ${NL_MAXIMO_CARACTERES}`; };
+  campo.addEventListener("input", atualizar);
+  atualizar();
 }
 
 function mostrarRetorno(mensagem, classe) {
@@ -15,8 +17,9 @@ function mostrarRetorno(mensagem, classe) {
   area.hidden = !mensagem;
 }
 
-// Envia o texto digitado ou transcrito. A voz usa esta mesma função, mudando só o canal.
-async function enviarLinguagemNatural(texto, canal, botao) {
+// Caminho único do texto digitado e do transcrito: só o canal muda.
+async function enviarLinguagemNatural(campo, canal, botao) {
+  const texto = campo.value;
   if (!texto.trim()) {
     mostrarRetorno("Escreva o que deseja fazer no mapa.", "aviso erro");
     return;
@@ -30,6 +33,7 @@ async function enviarLinguagemNatural(texto, canal, botao) {
     if (resposta.tipo === "pergunta") {
       mostrarRetorno(`${resposta.pergunta} Complete o texto acima e envie de novo.`, "aviso");
     } else {
+      revisao.campo = campo;
       abrirRevisao(resposta);
     }
   } catch (erro) {
@@ -121,8 +125,8 @@ async function confirmarRevisao() {
   const avisos = selecionadas.map((op) => op.aviso).filter(Boolean);
   avisos.forEach((texto) => avisar(texto, "alerta", 12000));
   avisar(`${selecionadas.length} operação(ões) aplicada(s).`);
-  $("#nl-texto").value = "";
-  atualizarContador();
+  revisao.campo.value = "";
+  revisao.campo.dispatchEvent(new Event("input"));
   mostrarRetorno("", "");
 
   // Algoritmos rodam depois das alterações, já sobre o grafo final.
@@ -133,13 +137,14 @@ async function confirmarRevisao() {
   }
 }
 
-$("#nl-texto").addEventListener("input", atualizarContador);
+ligarContador($("#nl-texto"), $("#nl-contador"));
+ligarContador($("#voz-texto"), $("#voz-contador"));
 $("#nl-enviar").addEventListener("click", (evento) => {
-  enviarLinguagemNatural($("#nl-texto").value, "texto", evento.currentTarget);
+  enviarLinguagemNatural($("#nl-texto"), "texto", evento.currentTarget);
 });
 $("#nl-texto").addEventListener("keydown", (evento) => {
   if (evento.key === "Enter" && (evento.ctrlKey || evento.metaKey)) $("#nl-enviar").click();
 });
+$$(".aba").forEach((aba) => aba.addEventListener("click", () => mostrarRetorno("", "")));
 $("#revisao-cancelar").addEventListener("click", () => $("#revisao").close());
 $("#revisao-confirmar").addEventListener("click", confirmarRevisao);
-atualizarContador();

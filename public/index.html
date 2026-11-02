@@ -38,12 +38,24 @@
             <span class="nota" id="nl-contador"></span>
             <button type="button" class="botao primario" id="nl-enviar">Interpretar</button>
           </div>
-          <div id="nl-retorno" role="status" hidden></div>
           <p class="nota nl-exemplos">Exemplos: "remova a via entre A e B", "mude o peso de O para C para 6", "adicione o bairro T ligado ao D com custo 5", "agora o grafo é direcionado", "rodar Dijkstra a partir de O".</p>
         </div>
 
         <div class="aba-conteudo" data-conteudo="voz" hidden>
-          <p class="nota">Entrada por voz em construção. Use as abas Manual, Texto ou Importar/Exemplos.</p>
+          <div class="voz-controle">
+            <button type="button" class="botao voz-microfone" id="voz-microfone" aria-pressed="false" aria-label="Iniciar gravação">
+              <span class="voz-indicador" aria-hidden="true"></span><span id="voz-rotulo">Falar</span>
+            </button>
+            <span class="nota" id="voz-estado" role="status"></span>
+          </div>
+          <div id="voz-sem-suporte" class="aviso erro" hidden>Este navegador não tem reconhecimento de voz. Use o Google Chrome ou as abas Linguagem natural, Manual e Texto.</div>
+          <p class="nota voz-parcial" id="voz-parcial"></p>
+          <label class="bloco" for="voz-texto">Transcrição: corrija o que for preciso (por exemplo, "be" que deveria ser B) antes de enviar.</label>
+          <textarea id="voz-texto" rows="5" maxlength="2000" placeholder="Fale, por exemplo: rodar Dijkstra a partir de O"></textarea>
+          <div class="linha-envio">
+            <span class="nota" id="voz-contador"></span>
+            <button type="button" class="botao primario" id="voz-enviar">Interpretar</button>
+          </div>
         </div>
 
         <div class="aba-conteudo" data-conteudo="manual" hidden>
@@ -93,6 +105,8 @@
             <label class="botao" tabindex="0">Importar JSON<input type="file" id="arquivo-importar" accept=".json,application/json" hidden></label>
           </div>
         </div>
+
+        <div id="nl-retorno" role="status" hidden></div>
       </section>
 
       <section class="painel area-mapa" aria-labelledby="titulo-mapa">
@@ -178,5 +192,6 @@
   <script src="/js/grafo_visual.js"></script>
   <script src="/js/app.js"></script>
   <script src="/js/linguagem_natural.js"></script>
+  <script src="/js/voz.js"></script>
 </body>
 </html>

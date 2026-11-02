@@ -104,7 +104,7 @@ def test_parametros_da_chamada_respeitam_os_limites(com_ia, cliente):
     falso = com_ia(resposta_modelo(bloco_ferramenta([ADICIONAR_T])))
     assert interpretar_http(cliente, "adicione o bairro T", "voz").status_code == 200
     chamada = falso.chamadas[0]
-    assert chamada["max_tokens"] == 2000
+    assert chamada["max_tokens"] == 4000
     assert chamada["model"] == "claude-sonnet-5-5"
     assert chamada["tool_choice"]["type"] == "auto"
     assert chamada["tools"][0]["strict"] is True
@@ -505,4 +505,4 @@ def test_limites_das_rotas_estao_nos_valores_especificados():
     assert rotas_ia.MAXIMO_CARACTERES == 2000
     assert rotas_ia.limitador_ia.maximo == 30
     assert rotas_ia.limitador_ia.janela_segundos == 3600
-    assert interpretador.MAX_TOKENS == 2000
+    assert interpretador.MAX_TOKENS == 4000

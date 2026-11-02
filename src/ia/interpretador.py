@@ -13,8 +13,8 @@ from src.core.algoritmos.comum import exigir_vertices
 from src.core.grafo import ErroGrafo, ListaAdjacencia
 from src.ia.prompts import FERRAMENTA, NOME_FERRAMENTA, SISTEMA
 
-MAX_TOKENS = 2000
-TEMPO_LIMITE_SEGUNDOS = 30
+MAX_TOKENS = 4000
+TEMPO_LIMITE_SEGUNDOS = 60
 NOMES_ALGORITMOS = {"dfs": "DFS", "bfs": "BFS", "dijkstra": "Dijkstra", "kruskal": "Kruskal"}
 
 # Modelos que aceitam nova tentativa automática no servidor quando o pedido é recusado.
