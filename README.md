@@ -10,7 +10,7 @@ As credenciais da versão publicada foram enviadas ao professor no e-mail de ent
 
 | | |
 |---|---|
-| **Integrantes** | Guilherme Dias ([MATRÍCULA]), Breno Chaves ([MATRÍCULA]), Barbara Malta ([MATRÍCULA]) |
+| **Integrantes** | Guilherme Dias 202402972091, Breno Chaves 202402798502, Barbara Malta 202402898892 |
 | **Curso** | Engenharia de Computação/Software, Ibmec |
 | **Disciplina** | Análise e Complexidade de Algoritmos (IBM3121), 6º período |
 | **Professor** | Cassius Figueiredo |
