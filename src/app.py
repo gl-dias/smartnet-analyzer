@@ -14,8 +14,12 @@ from src import config
 from src.api import rotas_algoritmos, rotas_grafo, rotas_ia
 from src.auth import sessao
 from src.core.grafo import ErroGrafo
+from src.db.supabase_rest import MENSAGEM_INDISPONIVEL, ErroSupabase
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+# Sem isto, cada chamada aos serviços externos geraria uma linha no log.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpx2").setLevel(logging.WARNING)
 
 PASTA_PUBLICA = Path(__file__).resolve().parent.parent / "public"
 
@@ -33,6 +37,8 @@ MENSAGENS_VALIDACAO = {
     "model_attributes_type": "deve ser um objeto",
     "too_long": "excede o tamanho máximo permitido",
     "literal_error": "valor não permitido",
+    "uuid_parsing": "identificador inválido",
+    "uuid_type": "identificador inválido",
     "json_invalid": "JSON inválido",
 }
 
@@ -66,12 +72,17 @@ async def tratar_erro_grafo(_: Request, erro: ErroGrafo):
     return JSONResponse(status_code=422, content={"erro": str(erro)})
 
 
+@app.exception_handler(ErroSupabase)
+async def tratar_erro_supabase(_: Request, __: ErroSupabase):
+    return JSONResponse(status_code=503, content={"erro": MENSAGEM_INDISPONIVEL})
+
+
 @app.exception_handler(RequestValidationError)
 async def tratar_erro_validacao(_: Request, erro: RequestValidationError):
     problema = erro.errors()[0]
     tipo = problema["type"]
     # Uniões de tipos geram um sufixo com o tipo testado, como arestas.0.peso.int.
-    campos = [str(p) for p in problema["loc"] if p != "body"]
+    campos = [str(p) for p in problema["loc"] if p not in ("body", "path")]
     while campos and campos[-1] in ("str", "int", "float"):
         campos.pop()
     mensagem = MENSAGENS_VALIDACAO.get(tipo, "valor inválido")

@@ -2,7 +2,23 @@
 
 const NL_MAXIMO_CARACTERES = 2000;
 
-const revisao = { operacoes: [], marcadas: [], grafo: null, visual: null, campo: null };
+const revisao = {
+  operacoes: [],
+  marcadas: [],
+  grafo: null,
+  visual: null,
+  campo: null,
+  canal: "texto",
+  interpretacaoId: null,
+  decidida: false,
+};
+
+// Grava na auditoria se o usuário aceitou ou não. Uma falha aqui não atrapalha o uso.
+function registrarDecisao(aceito) {
+  if (revisao.decidida || !revisao.interpretacaoId) return;
+  revisao.decidida = true;
+  chamarApi(`/api/interpretacoes/${revisao.interpretacaoId}/decisao`, { aceito }).catch(() => {});
+}
 
 function ligarContador(campo, contador) {
   const atualizar = () => { contador.textContent = `${campo.value.length} / ${NL_MAXIMO_CARACTERES}`; };
@@ -34,6 +50,9 @@ async function enviarLinguagemNatural(campo, canal, botao) {
       mostrarRetorno(`${resposta.pergunta} Complete o texto acima e envie de novo.`, "aviso");
     } else {
       revisao.campo = campo;
+      revisao.canal = canal;
+      revisao.interpretacaoId = resposta.interpretacao_id;
+      revisao.decidida = false;
       abrirRevisao(resposta);
     }
   } catch (erro) {
@@ -119,8 +138,14 @@ function camposOperacao(op) {
 async function confirmarRevisao() {
   const selecionadas = revisao.operacoes.filter((_, i) => revisao.marcadas[i]);
   const trocaGrafo = selecionadas.some((op) => op.tipo === "limpar_grafo");
+  // Só executar um algoritmo não altera o grafo: ele continua ligado ao registro salvo.
+  const alteraGrafo = selecionadas.some((op) => op.tipo !== "executar_algoritmo");
+  registrarDecisao(true);
   $("#revisao").close();
-  if (!await aplicarGrafo(revisao.grafo, { novo: trocaGrafo })) return;
+  if (alteraGrafo) {
+    const origem = revisao.canal === "voz" ? "voz" : "linguagem_natural";
+    if (!await aplicarGrafo(revisao.grafo, { novo: trocaGrafo, origem })) return;
+  }
 
   const avisos = selecionadas.map((op) => op.aviso).filter(Boolean);
   avisos.forEach((texto) => avisar(texto, "alerta", 12000));
@@ -147,4 +172,6 @@ $("#nl-texto").addEventListener("keydown", (evento) => {
 });
 $$(".aba").forEach((aba) => aba.addEventListener("click", () => mostrarRetorno("", "")));
 $("#revisao-cancelar").addEventListener("click", () => $("#revisao").close());
+// Vale para o botão Cancelar e para a tecla Esc. Depois de confirmar, não tem efeito.
+$("#revisao").addEventListener("close", () => registrarDecisao(false));
 $("#revisao-confirmar").addEventListener("click", confirmarRevisao);

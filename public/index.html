@@ -104,6 +104,8 @@
             <button type="button" class="botao" id="botao-exportar">Exportar JSON</button>
             <label class="botao" tabindex="0">Importar JSON<input type="file" id="arquivo-importar" accept=".json,application/json" hidden></label>
           </div>
+          <h3>Grafos salvos</h3>
+          <div id="lista-salvos" class="lista-salvos"></div>
         </div>
 
         <div id="nl-retorno" role="status" hidden></div>
@@ -113,7 +115,7 @@
         <div class="painel-cabecalho">
           <h2 id="titulo-mapa">Mapa da cidade</h2>
           <div class="linha-botoes">
-            <button type="button" class="botao" id="botao-salvar" disabled title="Disponível com o banco de dados">Salvar grafo</button>
+            <button type="button" class="botao" id="botao-salvar">Salvar grafo</button>
             <button type="button" class="botao" id="botao-apagar">Apagar grafo</button>
           </div>
         </div>
@@ -165,6 +167,17 @@
       <div class="linha-botoes fim">
         <button class="botao" value="nao">Cancelar</button>
         <button class="botao perigo" id="modal-confirmar" value="sim"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modal-salvar" class="modal" aria-labelledby="salvar-titulo">
+    <form id="form-salvar" autocomplete="off">
+      <h2 id="salvar-titulo">Salvar grafo</h2>
+      <label class="bloco salvar-rotulo">Nome<input id="salvar-nome" maxlength="100" required></label>
+      <div class="linha-botoes fim">
+        <button type="button" class="botao" id="salvar-cancelar">Cancelar</button>
+        <button type="submit" class="botao primario" id="salvar-confirmar">Salvar</button>
       </div>
     </form>
   </dialog>

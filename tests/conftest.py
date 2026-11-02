@@ -18,6 +18,8 @@ os.environ.update(
         "PROXIES_CONFIAVEIS": "1",
         # Vazia de propósito: nenhum teste pode gastar a API de verdade.
         "ANTHROPIC_API_KEY": "",
+        "SUPABASE_URL": "",
+        "SUPABASE_SERVICE_KEY": "",
     }
 )
 

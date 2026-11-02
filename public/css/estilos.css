@@ -193,6 +193,14 @@ summary { cursor: pointer; color: var(--suave); }
 .flutuante.erro { border-left-color: var(--perigo); }
 .flutuante.alerta { border-left-color: var(--alerta); }
 
+/* Grafos salvos */
+
+.salvar-rotulo { margin: 14px 0 0; }
+.lista-salvos { display: grid; gap: 6px; max-height: 240px; overflow-y: auto; }
+.salvo { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--borda); border-radius: 6px; }
+.salvo-info { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.salvo-info small { display: block; color: var(--suave); }
+
 /* Linguagem natural e revisão */
 
 .linha-envio { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }

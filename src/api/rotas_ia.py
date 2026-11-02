@@ -1,13 +1,17 @@
 """Rotas de linguagem natural. Nenhuma delas altera o grafo: quem aplica é o front, após a revisão."""
 
+import uuid
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, Field, StrictStr
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, StrictBool, StrictStr
+from starlette.background import BackgroundTask
 
 from src.api.rotas_grafo import GrafoEntrada, construir_grafo, descrever_estrutura
 from src.auth.rate_limit import LimitadorTaxa
 from src.core.grafo import ListaAdjacencia
+from src.db import supabase_rest
 from src.ia.interpretador import ErroIA, Operacao, interpretar, simular
 
 MAXIMO_CARACTERES = 2000
@@ -32,6 +36,10 @@ class PreviaEntrada(BaseModel):
     operacoes: list[Operacao] = Field(max_length=MAXIMO_OPERACOES)
 
 
+class DecisaoEntrada(BaseModel):
+    aceito: StrictBool
+
+
 def _resposta_simulada(dados, operacoes):
     simulado = simular(dados, operacoes)
     grafo = ListaAdjacencia.from_json(simulado["grafo"])
@@ -44,7 +52,7 @@ def _resposta_simulada(dados, operacoes):
 
 
 @roteador.post("/interpretar")
-def rota_interpretar(entrada: InterpretarEntrada, request: Request):
+def rota_interpretar(entrada: InterpretarEntrada, request: Request, tarefas: BackgroundTasks):
     texto = entrada.texto.strip()
     if not texto:
         raise HTTPException(status_code=422, detail="Escreva o que deseja fazer no mapa.")
@@ -68,13 +76,43 @@ def rota_interpretar(entrada: InterpretarEntrada, request: Request):
         )
 
     dados = entrada.grafo.model_dump(exclude_none=True)
+    interpretacao_id = str(uuid.uuid4())
+    # Toda chamada à IA fica registrada para auditoria, inclusive as que não geram operações.
+    auditoria = (
+        supabase_rest.registrar_sem_falhar,
+        supabase_rest.registrar_interpretacao,
+        interpretacao_id,
+        request.session.get("id"),
+        texto,
+        entrada.canal,
+    )
     try:
         resultado = interpretar(texto, entrada.canal, dados)
     except ErroIA as erro:
-        raise HTTPException(status_code=503, detail=str(erro)) from erro
+        # A auditoria acompanha a resposta, pois uma exceção cancelaria as tarefas da rota.
+        return JSONResponse(
+            status_code=503,
+            content={"erro": str(erro)},
+            background=BackgroundTask(*auditoria, {"erro": str(erro)}),
+        )
     if resultado["tipo"] == "pergunta":
+        tarefas.add_task(*auditoria, {"pergunta": resultado["pergunta"]})
         return resultado
-    return _resposta_simulada(dados, resultado["operacoes"])
+    resposta = _resposta_simulada(dados, resultado["operacoes"])
+    tarefas.add_task(*auditoria, resposta["operacoes"])
+    return {**resposta, "interpretacao_id": interpretacao_id}
+
+
+@roteador.post("/interpretacoes/{interpretacao_id}/decisao")
+def rota_decisao(interpretacao_id: uuid.UUID, entrada: DecisaoEntrada, tarefas: BackgroundTasks):
+    """Registra se o usuário confirmou ou cancelou a revisão."""
+    tarefas.add_task(
+        supabase_rest.registrar_sem_falhar,
+        supabase_rest.marcar_interpretacao,
+        interpretacao_id,
+        entrada.aceito,
+    )
+    return {"ok": True}
 
 
 @roteador.post("/operacoes/previa")

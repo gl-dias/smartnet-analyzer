@@ -9,6 +9,9 @@ const estado = {
   avisos: [],
   contadores: { grafos: 0, algoritmos: 0 },
   ultimoResultado: null,
+  origemEntrada: "manual",
+  // Id no banco enquanto o grafo atual for idêntico ao salvo; liga as execuções a ele.
+  grafoSalvoId: null,
 };
 
 const $ = (seletor) => document.querySelector(seletor);
@@ -50,14 +53,15 @@ function confirmar(titulo, texto, rotulo) {
   });
 }
 
-async function chamarApi(caminho, corpo) {
+async function chamarApi(caminho, corpo, metodo) {
+  const opcoes = { method: metodo || (corpo === undefined ? "GET" : "POST") };
+  if (corpo !== undefined) {
+    opcoes.headers = { "Content-Type": "application/json" };
+    opcoes.body = JSON.stringify(corpo);
+  }
   let resposta;
   try {
-    resposta = await fetch(caminho, corpo === undefined ? {} : {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(corpo),
-    });
+    resposta = await fetch(caminho, opcoes);
   } catch {
     throw new Error("Não foi possível falar com o servidor. Verifique a conexão.");
   }
@@ -97,7 +101,7 @@ function normalizarGrafo(grafo) {
 
 // Só troca o estado depois que o backend aceita o grafo candidato.
 // As arestas ficam como o usuário as inseriu (sentido e peso) para sobreviver às chaves do topo.
-async function aplicarGrafo(candidato, { novo = false } = {}) {
+async function aplicarGrafo(candidato, { novo = false, origem = null } = {}) {
   const normalizado = normalizarGrafo(candidato);
   try {
     const resposta = await chamarApi("/api/estrutura", normalizado);
@@ -106,6 +110,8 @@ async function aplicarGrafo(candidato, { novo = false } = {}) {
     estado.listaAdjacencia = resposta.lista_adjacencia;
     estado.estatisticas = resposta.estatisticas;
     estado.avisos = resposta.avisos;
+    estado.grafoSalvoId = null;
+    if (origem) estado.origemEntrada = origem;
     if (resposta.vertices.length && (novo || estavaVazio)) estado.contadores.grafos += 1;
     renderizar();
     salvarEstado();
@@ -130,6 +136,8 @@ function salvarEstado() {
     sessionStorage.setItem(CHAVE_ARMAZENAMENTO, JSON.stringify({
       grafo: estado.grafo,
       contadores: estado.contadores,
+      origemEntrada: estado.origemEntrada,
+      grafoSalvoId: estado.grafoSalvoId,
     }));
   } catch { /* O armazenamento é só uma conveniência para recarregar a página. */ }
 }
@@ -279,7 +287,7 @@ async function adicionarVia(evento) {
     }
   }
   candidato.arestas.push(aresta);
-  if (await aplicarGrafo(candidato)) {
+  if (await aplicarGrafo(candidato, { origem: "manual" })) {
     evento.target.reset();
     $("#via-origem").focus();
   }
@@ -289,7 +297,7 @@ async function adicionarBairro(evento) {
   evento.preventDefault();
   const candidato = copiaGrafo();
   candidato.vertices.push(nomeLimpo($("#bairro-nome").value));
-  if (await aplicarGrafo(candidato)) evento.target.reset();
+  if (await aplicarGrafo(candidato, { origem: "manual" })) evento.target.reset();
 }
 
 function removerBairro(vertice) {
@@ -405,7 +413,7 @@ async function aplicarTexto(substituir) {
   const candidato = copiaGrafo();
   if (substituir) candidato.vertices = [];
   candidato.arestas = substituir ? arestas : [...candidato.arestas, ...arestas];
-  if (await aplicarGrafo(candidato, { novo: substituir })) {
+  if (await aplicarGrafo(candidato, { novo: substituir, origem: "texto" })) {
     avisar(`${arestas.length} via(s) aplicada(s).`);
   }
 }
@@ -415,7 +423,7 @@ async function aplicarTexto(substituir) {
 async function carregarExemplo(nome) {
   try {
     const exemplo = await chamarApi(`/api/exemplos/${nome}`);
-    if (await aplicarGrafo(exemplo, { novo: true })) avisar(`${exemplo.nome} carregado.`);
+    if (await aplicarGrafo(exemplo, { novo: true, origem: "exemplo" })) avisar(`${exemplo.nome} carregado.`);
   } catch (erro) {
     avisar(erro.message, "erro");
   }
@@ -444,7 +452,97 @@ async function importarJson(evento) {
     avisar("O JSON deve ser um objeto com vertices e arestas.", "erro");
     return;
   }
-  if (await aplicarGrafo(dados, { novo: true })) avisar("Grafo importado.");
+  if (await aplicarGrafo(dados, { novo: true, origem: "importacao" })) avisar("Grafo importado.");
+}
+
+// Grafos salvos no banco
+
+function abrirSalvar() {
+  if (!estado.grafo.vertices.length) {
+    avisar("O grafo está vazio: não há o que salvar.", "erro");
+    return;
+  }
+  $("#salvar-nome").value = "";
+  $("#modal-salvar").showModal();
+}
+
+async function salvarGrafo(evento) {
+  evento.preventDefault();
+  const botao = $("#salvar-confirmar");
+  botao.disabled = true;
+  try {
+    const salvo = await chamarApi("/api/grafos", {
+      nome: $("#salvar-nome").value,
+      grafo: estado.grafo,
+      origem_entrada: estado.origemEntrada,
+    });
+    estado.grafoSalvoId = salvo.id;
+    salvarEstado();
+    $("#modal-salvar").close();
+    avisar(`Grafo "${salvo.nome}" salvo.`);
+    carregarSalvos();
+  } catch (erro) {
+    avisar(erro.message, "erro");
+  } finally {
+    botao.disabled = false;
+  }
+}
+
+async function carregarSalvos() {
+  const area = $("#lista-salvos");
+  try {
+    const { grafos } = await chamarApi("/api/grafos");
+    area.replaceChildren(...(grafos.length
+      ? grafos.map(itemSalvo)
+      : [el("span", { classe: "nota", texto: "Nenhum grafo salvo ainda." })]));
+  } catch (erro) {
+    area.replaceChildren(el("span", { classe: "nota", texto: erro.message }));
+  }
+}
+
+function itemSalvo(grafo) {
+  const tipo = `${grafo.direcionado ? "Direcionado" : "Não direcionado"}, ${grafo.ponderado ? "ponderado" : "sem peso"}`;
+  const data = new Date(grafo.criado_em).toLocaleString("pt-BR");
+  return el(
+    "div",
+    { classe: "salvo" },
+    el("div", { classe: "salvo-info" }, grafo.nome, el("small", { texto: `${tipo} | ${data}` })),
+    el("button", { type: "button", classe: "botao mini", texto: "Carregar", onclick: () => abrirSalvo(grafo.id) }),
+    el("button", {
+      type: "button",
+      classe: "botao mini",
+      texto: "×",
+      title: `Excluir ${grafo.nome}`,
+      "aria-label": `Excluir ${grafo.nome}`,
+      onclick: () => excluirSalvo(grafo),
+    }),
+  );
+}
+
+async function abrirSalvo(id) {
+  try {
+    const grafo = await chamarApi(`/api/grafos/${id}`);
+    if (await aplicarGrafo(grafo, { novo: true, origem: grafo.origem_entrada })) {
+      estado.grafoSalvoId = grafo.id;
+      salvarEstado();
+      avisar(`Grafo "${grafo.nome}" carregado.`);
+    }
+  } catch (erro) {
+    avisar(erro.message, "erro");
+  }
+}
+
+async function excluirSalvo(grafo) {
+  if (!await confirmar("Excluir grafo salvo", `"${grafo.nome}" será apagado do banco de dados.`, "Excluir")) return;
+  try {
+    await chamarApi(`/api/grafos/${grafo.id}`, undefined, "DELETE");
+    if (estado.grafoSalvoId === grafo.id) estado.grafoSalvoId = null;
+    salvarEstado();
+    avisar(`Grafo "${grafo.nome}" excluído.`);
+    carregarSalvos();
+  } catch (erro) {
+    avisar(erro.message, "erro");
+  }
 }
 
 // Resultados dos algoritmos
@@ -642,6 +740,7 @@ async function executarAlgoritmo(algoritmo) {
       grafo: estado.grafo,
       origem: $("#seletor-origem").value || null,
       destino: $("#seletor-destino").value || null,
+      grafo_id: estado.grafoSalvoId,
     });
     estado.ultimoResultado = resultado;
     estado.contadores.algoritmos += 1;
@@ -707,6 +806,7 @@ async function sair() {
 function ativarAba(nome) {
   $$(".aba").forEach((aba) => aba.setAttribute("aria-selected", String(aba.dataset.aba === nome)));
   $$(".aba-conteudo").forEach((conteudo) => { conteudo.hidden = conteudo.dataset.conteudo !== nome; });
+  if (nome === "importar") carregarSalvos();
 }
 
 function ligarEventos() {
@@ -724,6 +824,9 @@ function ligarEventos() {
   $("#botao-apagar").addEventListener("click", apagarGrafo);
   $("#botao-finalizar").addEventListener("click", finalizarAplicacao);
   $("#botao-sair").addEventListener("click", sair);
+  $("#botao-salvar").addEventListener("click", abrirSalvar);
+  $("#form-salvar").addEventListener("submit", salvarGrafo);
+  $("#salvar-cancelar").addEventListener("click", () => $("#modal-salvar").close());
   $("#estrutura").addEventListener("mouseover", (e) => destacarCartao(e.target.closest(".cartao")));
   $("#estrutura").addEventListener("mouseleave", () => destacarCartao(null));
 }
@@ -732,7 +835,10 @@ ligarEventos();
 const salvo = restaurarEstado();
 if (salvo && salvo.grafo) {
   estado.contadores = salvo.contadores;
-  aplicarGrafo(salvo.grafo);
+  estado.origemEntrada = salvo.origemEntrada || "manual";
+  aplicarGrafo(salvo.grafo).then((aplicado) => {
+    if (aplicado) estado.grafoSalvoId = salvo.grafoSalvoId || null;
+  });
 } else {
   renderizar();
 }

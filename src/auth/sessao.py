@@ -8,12 +8,13 @@ import uuid
 from pathlib import Path
 
 import bcrypt
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
 from src import config
 from src.auth.rate_limit import LimitadorTaxa, ip_cliente
+from src.db import supabase_rest
 
 PASTA_PUBLICA = Path(__file__).resolve().parent.parent.parent / "public"
 
@@ -87,28 +88,38 @@ def pagina_login(request: Request):
     return FileResponse(PASTA_PUBLICA / "login.html")
 
 
+def _encerrar(request, tarefas):
+    """Apaga o cookie da sessão e registra o fim dela no banco."""
+    sessao_id = request.session.get("id")
+    request.session.clear()
+    if sessao_id:
+        tarefas.add_task(
+            supabase_rest.registrar_sem_falhar, supabase_rest.finalizar_sessao, sessao_id
+        )
+
+
 @roteador.post("/login")
-def login(dados: LoginEntrada, request: Request):
+def login(dados: LoginEntrada, request: Request, tarefas: BackgroundTasks):
     ip = ip_cliente(request)
     if not (limitador_login_ip.permitir(ip) and limitador_login_global.permitir("todos")):
         raise HTTPException(status_code=429, detail=MENSAGEM_BLOQUEIO)
     if not _credenciais_validas(dados.usuario, dados.senha):
         raise HTTPException(status_code=401, detail=MENSAGEM_CREDENCIAIS)
     limitador_login_ip.limpar(ip)
+    sessao_id = str(uuid.uuid4())
     request.session.clear()
-    request.session.update(
-        {"usuario": dados.usuario, "id": str(uuid.uuid4()), "inicio": _agora()}
-    )
+    request.session.update({"usuario": dados.usuario, "id": sessao_id, "inicio": _agora()})
+    tarefas.add_task(supabase_rest.registrar_sem_falhar, supabase_rest.registrar_sessao, sessao_id)
     return {"ok": True}
 
 
 @roteador.post("/logout")
-def logout(request: Request):
-    request.session.clear()
+def logout(request: Request, tarefas: BackgroundTasks):
+    _encerrar(request, tarefas)
     return {"ok": True}
 
 
 @roteador.post("/api/sessao/finalizar")
-def finalizar_sessao(request: Request):
-    request.session.clear()
+def finalizar_sessao(request: Request, tarefas: BackgroundTasks):
+    _encerrar(request, tarefas)
     return {"ok": True}
