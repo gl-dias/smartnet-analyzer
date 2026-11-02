@@ -13,7 +13,7 @@ COMPLEXIDADE = {
     "espaco": "O(V + E)",
     "explicacao": (
         "Cada aresta pode gerar uma inserção no heap, e cada inserção ou extração "
-        "custa O(log E) = O(log V), pois E < V². Entradas antigas ficam no heap e "
+        "custa O(log E) = O(log V), pois E ≤ V². Entradas antigas ficam no heap e "
         "são descartadas ao sair, por isso ele pode guardar O(E) itens."
     ),
 }

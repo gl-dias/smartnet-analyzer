@@ -10,7 +10,7 @@ COMPLEXIDADE = {
     "explicacao": (
         "Ordenar as arestas com merge sort custa O(E log E). Depois, cada aresta "
         "faz operações de Union-Find em O(α(V)) amortizado, um custo dominado pela "
-        "ordenação. Como E < V², O(E log E) equivale a O(E log V)."
+        "ordenação. Como E ≤ V², O(E log E) equivale a O(E log V)."
     ),
 }
 

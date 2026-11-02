@@ -4,11 +4,13 @@ from src.core.algoritmos.comum import exigir_vertices
 
 COMPLEXIDADE = {
     "tempo": "O(V + E)",
-    "espaco": "O(V)",
+    "espaco": "O(V + E)",
     "explicacao": (
         "Cada vértice é descoberto e finalizado uma única vez, e cada lista de "
         "adjacência é percorrida uma única vez. A análise de conectividade faz "
-        "um número constante de percursos, logo mantém O(V + E)."
+        "um número constante de percursos, logo mantém O(V + E). No espaço, a pilha "
+        "guarda os vizinhos de cada vértice aberto e a análise monta a adjacência "
+        "transposta, ambas limitadas por O(V + E)."
     ),
 }
 
@@ -149,7 +151,7 @@ def _becos_sem_saida(grafo):
 def dfs(grafo, origem):
     """Executa a DFS a partir de origem, visitando vizinhos em ordem alfabética.
 
-    Complexidade: O(V + E) em tempo e O(V) de espaço adicional.
+    Complexidade: O(V + E) em tempo e O(V + E) de espaço adicional.
     """
     exigir_vertices(grafo, origem)
 

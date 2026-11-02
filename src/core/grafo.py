@@ -68,7 +68,9 @@ class ListaAdjacencia:
         Espaço: O(V + E).
         adicionar_vertice: O(V), busca binária mais deslocamento na lista ordenada.
         adicionar_aresta: O(d), busca binária mais deslocamento na lista de vizinhos.
-        remover_aresta, alterar_peso: O(d).
+        remover_aresta: O(d), busca binária mais deslocamento.
+        alterar_peso: O(log d), só busca binária, sem deslocar a lista.
+        tem_aresta: O(log d).
         remover_vertice: O(V + E), precisa retirar o vértice das listas dos demais.
         vizinhos: O(d).
         arestas, para_dict, para_json: O(V + E).
