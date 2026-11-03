@@ -33,15 +33,16 @@ Um consórcio quer modernizar a infraestrutura de uma cidade inteligente. A cida
 - Lista de adjacência implementada do zero e exibida na interface, vértice a vértice.
 - Botões para DFS, BFS, Dijkstra e Kruskal, com tabelas, complexidade teórica e tempo medido.
 - Desenho do grafo com animação do resultado: ordem de visita, caminho mínimo e arestas da árvore geradora.
+- **Folha de prova:** os quatro resultados de uma vez, no formato de resolução à mão e prontos para imprimir, com a árvore DFS desenhada, a fila da BFS a cada etapa e a tabela do Dijkstra por iteração.
 - Salvar, listar, carregar e excluir grafos no banco de dados.
 - Ciclo interativo: é possível apagar o grafo, inserir outro e rodar quantos algoritmos quiser até clicar em **Finalizar aplicação**.
 - Login com conta única, para proteger a aplicação publicada e o custo da API.
 
 ### Saída de cada algoritmo
 
-- **DFS:** ordem de visita, árvore em texto indentado, predecessores, tempos de descoberta e finalização, componentes, classificação de conectividade, vértices inalcançáveis e becos sem saída.
-- **BFS:** fila passo a passo, fila final de execução, nível de cada vértice e caminho com menos saltos até um destino opcional.
-- **Dijkstra:** tabela de vértice, distância, predecessor e caminho, com `∞` para inalcançáveis, além das relaxações passo a passo. Pesos negativos são rejeitados com a explicação do motivo.
+- **DFS:** árvore desenhada, com linha cheia nas arestas da árvore, tracejado nas demais e `d/f` em cada vértice; a mesma árvore em texto indentado; ordem de visita, predecessores, tipo das arestas fora da árvore, componentes, classificação de conectividade, vértices inalcançáveis e becos sem saída.
+- **BFS:** fila a cada etapa com o nível sobre cada vértice, tabela passo a passo, fila final de execução e caminho com menos saltos até um destino opcional.
+- **Dijkstra:** tabela por iteração com o vértice fechado circulado, tabela de vértice, distância, predecessor e caminho, com `∞` para inalcançáveis, além das relaxações passo a passo. Pesos negativos são rejeitados com a explicação do motivo.
 - **Kruskal:** decisão sobre cada aresta, arestas selecionadas e custo total. Em grafo desconexo, devolve a floresta geradora mínima e avisa. Em grafo direcionado, avisa e executa ignorando a direção.
 
 ## Formas de entrada

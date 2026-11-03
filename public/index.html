@@ -142,6 +142,7 @@
           <button type="button" class="botao-algoritmo" data-algoritmo="dijkstra">Dijkstra<small>Rotas de emergência</small></button>
           <button type="button" class="botao-algoritmo" data-algoritmo="kruskal">Kruskal<small>Rede de fibra ótica</small></button>
         </div>
+        <button type="button" class="botao largo botao-folha" id="botao-folha">Folha de prova</button>
         <div id="resultados" class="resultados" aria-live="polite"></div>
       </section>
     </main>
@@ -169,6 +170,21 @@
         <button class="botao perigo" id="modal-confirmar" value="sim"></button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="folha-janela" class="modal modal-folha" aria-labelledby="folha-titulo">
+    <div class="folha-topo">
+      <div>
+        <h2 id="folha-titulo">Folha de prova</h2>
+        <p class="nota" id="folha-resumo"></p>
+      </div>
+      <div class="linha-botoes folha-acoes">
+        <button type="button" class="botao" id="folha-atualizar">Atualizar</button>
+        <button type="button" class="botao primario" id="folha-imprimir">Imprimir</button>
+        <button type="button" class="botao" id="folha-fechar">Fechar</button>
+      </div>
+    </div>
+    <div id="folha-corpo" class="folha-corpo"></div>
   </dialog>
 
   <dialog id="modal-salvar" class="modal" aria-labelledby="salvar-titulo">
@@ -204,6 +220,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js" integrity="sha384-yxKDWWf0wwdUj/gPeuL11czrnKFQROnLgY8ll7En9NYoXibgg3C6NK/UDHNtUgWJ" crossorigin="anonymous"></script>
   <script src="/js/grafo_visual.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/folha.js"></script>
   <script src="/js/linguagem_natural.js"></script>
   <script src="/js/voz.js"></script>
 </body>

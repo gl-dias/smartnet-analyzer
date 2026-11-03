@@ -148,6 +148,31 @@ def _becos_sem_saida(grafo):
     return becos
 
 
+def _arestas_fora_da_arvore(grafo, predecessores, descoberta, finalizacao):
+    """Arestas entre vértices alcançados que não entraram na árvore DFS, com seu tipo. O(V + E).
+
+    Em grafo não direcionado, toda aresta fora da árvore liga um vértice a um ancestral,
+    logo é de retorno. Em grafo direcionado, os tempos de descoberta e finalização dizem
+    se ela volta a um ancestral, avança para um descendente ou cruza entre ramos.
+    """
+    resultado = []
+    for de, para, _ in grafo.arestas():
+        if de not in descoberta or para not in descoberta:
+            continue
+        if predecessores[para] == de or (not grafo.direcionado and predecessores[de] == para):
+            continue
+        if not grafo.direcionado or de == para:
+            tipo = "retorno"
+        elif descoberta[para] < descoberta[de] and finalizacao[para] > finalizacao[de]:
+            tipo = "retorno"
+        elif descoberta[de] < descoberta[para] and finalizacao[para] < finalizacao[de]:
+            tipo = "avanco"
+        else:
+            tipo = "cruzamento"
+        resultado.append({"origem": de, "destino": para, "tipo": tipo})
+    return resultado
+
+
 def dfs(grafo, origem):
     """Executa a DFS a partir de origem, visitando vizinhos em ordem alfabética.
 
@@ -187,6 +212,9 @@ def dfs(grafo, origem):
         "arestas_arvore": [
             {"origem": predecessores[v], "destino": v} for v in ordem_visita[1:]
         ],
+        "arestas_fora_da_arvore": _arestas_fora_da_arvore(
+            grafo, predecessores, descoberta, finalizacao
+        ),
         "tabela": [
             {
                 "vertice": v,

@@ -139,6 +139,65 @@ def test_resultados_sao_serializaveis_em_json(enunciado):
         assert resultado["complexidade"]["tempo"].startswith("O(")
 
 
+# Arestas fora da árvore DFS
+
+
+def test_arvore_igual_ao_exemplo_da_prova():
+    grafo = ListaAdjacencia(ponderado=False)
+    for de, para in [
+        ("A", "B"), ("A", "C"), ("A", "D"), ("B", "E"), ("B", "F"), ("C", "F"),
+        ("D", "G"), ("D", "H"), ("E", "I"), ("E", "J"), ("G", "H"), ("I", "J"),
+    ]:
+        grafo.adicionar_aresta(de, para)
+    resultado = dfs(grafo, "A")
+    assert {(a["origem"], a["destino"]) for a in resultado["arestas_arvore"]} == {
+        ("A", "B"), ("B", "E"), ("E", "I"), ("I", "J"), ("B", "F"),
+        ("F", "C"), ("A", "D"), ("D", "G"), ("G", "H"),
+    }
+    assert resultado["arestas_fora_da_arvore"] == [
+        {"origem": "A", "destino": "C", "tipo": "retorno"},
+        {"origem": "D", "destino": "H", "tipo": "retorno"},
+        {"origem": "E", "destino": "J", "tipo": "retorno"},
+    ]
+
+
+def test_arvore_e_arestas_de_fora_cobrem_todas_as_arestas(enunciado):
+    resultado = dfs(enunciado, "O")
+    assert len(resultado["arestas_arvore"]) == 7
+    assert len(resultado["arestas_fora_da_arvore"]) == 7
+    assert {a["tipo"] for a in resultado["arestas_fora_da_arvore"]} == {"retorno"}
+
+
+def test_direcionado_classifica_as_arestas_fora_da_arvore(direcionado):
+    assert dfs(direcionado, "O")["arestas_fora_da_arvore"] == [
+        {"origem": "D", "destino": "B", "tipo": "retorno"},
+        {"origem": "O", "destino": "C", "tipo": "avanco"},
+    ]
+
+
+def test_direcionado_detecta_aresta_de_cruzamento():
+    grafo = ListaAdjacencia(direcionado=True, ponderado=False)
+    for de, para in [("A", "B"), ("A", "C"), ("C", "B")]:
+        grafo.adicionar_aresta(de, para)
+    assert dfs(grafo, "A")["arestas_fora_da_arvore"] == [
+        {"origem": "C", "destino": "B", "tipo": "cruzamento"},
+    ]
+
+
+def test_arestas_de_vertices_nao_alcancados_ficam_de_fora(desconexo):
+    assert dfs(desconexo, "A")["arestas_fora_da_arvore"] == [
+        {"origem": "A", "destino": "C", "tipo": "retorno"},
+    ]
+
+
+def test_self_loop_aparece_como_retorno():
+    grafo = ListaAdjacencia(direcionado=True, ponderado=False)
+    grafo.adicionar_aresta("A", "A")
+    assert dfs(grafo, "A")["arestas_fora_da_arvore"] == [
+        {"origem": "A", "destino": "A", "tipo": "retorno"},
+    ]
+
+
 # Grafo direcionado
 
 

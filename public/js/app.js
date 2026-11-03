@@ -612,7 +612,8 @@ function resultadoDfs(r) {
   ]);
   return [
     secao("Ordem de visita", sequencia(r.ordem_visita)),
-    secao("Árvore DFS", el("pre", { classe: "arvore", texto: r.arvore_texto })),
+    secao("Árvore DFS", folhaDfs(r)),
+    secao("Árvore DFS em texto", el("pre", { classe: "arvore", texto: r.arvore_texto })),
     secao("Conectividade", dados(conectividade)),
     secao(
       "Predecessores e tempos",
@@ -627,6 +628,7 @@ function resultadoDfs(r) {
 function resultadoBfs(r) {
   const partes = [
     secao("Fila final de execução", sequencia(r.ordem_visita)),
+    secao("Fila a cada etapa (nível sobre o vértice)", folhaBfs(r)),
     secao(
       "Fila passo a passo",
       tabela(
@@ -656,6 +658,7 @@ function resultadoBfs(r) {
 
 function resultadoDijkstra(r) {
   const partes = [
+    secao("Tabela por iteração (circulado: vértice fechado)", folhaDijkstra(r)),
     secao(
       `Distâncias a partir de ${r.origem}`,
       tabela(
