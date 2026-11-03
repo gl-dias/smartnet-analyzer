@@ -325,14 +325,14 @@ summary { cursor: pointer; color: var(--suave); }
   .revisao-mapa { height: 240px; }
 }
 
+#folha-impressao { display: none; }
+
 @media print {
   body { background: #fff; }
-  body:has(#folha-janela[open]) > :not(#folha-janela) { display: none !important; }
-  .modal.modal-folha { position: static; display: block; width: 100%; max-width: none; max-height: none; padding: 0; border: 0; overflow: visible; background: #fff; color: #14181f; }
-  .modal.modal-folha::backdrop { display: none; }
-  .folha-acoes { display: none; }
-  #folha-titulo { color: #14181f; }
-  .modal.modal-folha .nota { color: #5a6573; }
+  body:has(#folha-impressao:not(:empty)) > :not(#folha-impressao) { display: none !important; }
+  #folha-impressao { display: block; color: #14181f; }
+  #folha-impressao h2 { color: #14181f; font-size: 18px; }
+  #folha-impressao .nota { color: #5a6573; }
   .folha-corpo { padding: 12px 0 0; }
   .folha-secao { break-inside: avoid; }
   .folha-rolagem { overflow: visible; }

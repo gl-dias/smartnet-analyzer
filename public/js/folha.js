@@ -365,6 +365,25 @@ function abrirFolha() {
   preencherFolha();
 }
 
+// Imprimir de dentro da janela modal corta o início da folha. Por isso, durante a impressão,
+// o conteúdo vai para uma área comum da página e depois volta para a janela.
+function prepararImpressao() {
+  if (!$("#folha-janela").open) return;
+  $("#folha-impressao").replaceChildren(
+    el("h2", { texto: "Folha de prova" }),
+    el("p", { classe: "nota", texto: $("#folha-resumo").textContent }),
+    $("#folha-corpo"),
+  );
+}
+
+function encerrarImpressao() {
+  const corpo = $("#folha-impressao #folha-corpo");
+  if (corpo) $("#folha-janela").append(corpo);
+  $("#folha-impressao").replaceChildren();
+}
+
+window.addEventListener("beforeprint", prepararImpressao);
+window.addEventListener("afterprint", encerrarImpressao);
 $("#botao-folha").addEventListener("click", abrirFolha);
 $("#folha-atualizar").addEventListener("click", preencherFolha);
 $("#folha-imprimir").addEventListener("click", () => window.print());
